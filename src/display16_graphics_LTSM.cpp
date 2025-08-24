@@ -550,8 +550,8 @@ void display16_graphics_LTSM ::setTextWrap(bool w) { _textwrap = w; }
 
 /*!
 	@brief Write 1 character on Display
-	@param  x character starting position on x-axis. Valid values
-	@param  y character starting position on x-axis. Valid values
+	@param  x character starting position on x-axis.
+	@param  y character starting position on y-axis.
 	@param  value Character to be written.
 	@note uses spiWriteDataBuffer method to write each character as a row by row buffer for speed.
 			Much faster than pixel by pixel spi byte writes,

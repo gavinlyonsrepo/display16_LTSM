@@ -86,6 +86,8 @@ Then just include the font file in your .ino program.
 
 ## Sources
 
+Fonts can be made from **ttf** files using [this tool.](https://github.com/gavinlyonsrepo/Colossus_LTSM) also written by author. 
+
 Some of the fonts packaged with library came from [rinky dink electronics ](http://rinkydinkelectronics.com/)
 
 ## Font Images
