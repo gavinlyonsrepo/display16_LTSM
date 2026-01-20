@@ -27,7 +27,7 @@
 0. C++ Library to support 16-bit color graphic displays.
 1. Graphics class included.
 2. Bitmaps supported: 1, 8, and 16 bit + sprites.
-3. Multiple displays supported, see supported-devices, new components can be added.
+3. Multiple displays supported, see supported-devices below, new components can be added.
     Device display driver are separate libraries that import this one.
     User can write their own if device not supported.
 4. 16 fonts included, new fonts can be easily added without changing source code
@@ -51,6 +51,7 @@ Component drivers are separate dependent downstream libraries that include this 
 | SSD1331| OLED |SPI HW & SW  | [github link](https://github.com/gavinlyonsrepo/SSD1331_LTSM)|
 | ILI9341 | TFT LCD |SPI HW & SW  | [github link](https://github.com/gavinlyonsrepo/ILI9341_LTSM)|
 | GC9A01 | TFT LCD |SPI HW & SW  | [github link](https://github.com/gavinlyonsrepo/GC9A01_LTSM)|
+| GC9D01 | TFT LCD |SPI HW & SW  | [github link](https://github.com/gavinlyonsrepo/GC9D01_LTSM)|
 
 ## Software
 
