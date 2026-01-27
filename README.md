@@ -81,14 +81,14 @@ Functions to support drawing bitmaps & sprites.
    256 colors vs 65,536 colors.
 
 
-### Advanced Graphics
+### Advanced Graphics Mode
 
+It is **OFF** by default.
 There is an advanced graphics modes in library.
 Standard graphics supports drawing lines, pixels
 rectangles, triangles, circles and rounded rectangles.
 Advanced graphics supports drawing polygons, dot grid, quadrilaterals, 
 arcs, ellipses and lines at an angle.
-It is **OFF** by default.
 If you want these 'advanced' functions, simply 
 comment in define dislib16 ADVANCED GRAPHICS ENABLE in display16 common LTSM.hpp. 
 This will enable advanced graphics mode. If this is disabled some examples 
@@ -96,7 +96,9 @@ may not work fully or even compile.
 
 ### Advanced buffer mode
 
-Advanced buffer mode. There is advanced buffer mode where the code writes to a global screen buffer instead of the VRAM of display. It is **OFF** by default more details at readme, 
+It is **OFF** by default.
+Advanced buffer mode. There is advanced buffer mode where the code writes 
+to a global screen buffer instead of the VRAM of display. More details at readme, 
 which is in the 'doc' folder [at link.](extras/doc/buffer_mode/README.md)
 **This mode is only for high RAM MCUs.**
 

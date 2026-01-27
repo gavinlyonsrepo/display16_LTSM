@@ -49,7 +49,7 @@ void display16_graphics_LTSM ::drawPixel(uint16_t x, uint16_t y, uint16_t color)
 	@return
 		-# Display_Success for success
 		-# Display_ShapeScreenBounds out of screen bounds
-	@note  uses spiWriteBuffer method
+	@note  uses spiWriteBuffer method in non-frame buffer mode
 */
 DisLib16::Ret_Codes_e display16_graphics_LTSM::fillRectBuffer(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint16_t color)
 {
@@ -69,7 +69,6 @@ DisLib16::Ret_Codes_e display16_graphics_LTSM::fillRectBuffer(uint16_t x, uint16
 	// Convert color to bytes
 	uint8_t hi = color >> 8;
 	uint8_t lo = color;
-
 	// Row buffer for one row of the rectangle
 	uint8_t rowBuffer[w * 2]; // Each pixel is 2 bytes (16-bit color)
 	// Fill the row buffer with the color
@@ -87,6 +86,7 @@ DisLib16::Ret_Codes_e display16_graphics_LTSM::fillRectBuffer(uint16_t x, uint16
 		spiWriteDataBuffer(rowBuffer, w * 2);
 	}
 	return DisLib16::Success;
+
 }
 
 /*!
@@ -107,11 +107,18 @@ void display16_graphics_LTSM ::fillScreen(uint16_t color)
 */
 void display16_graphics_LTSM ::drawFastVLine(uint16_t x, uint16_t y, uint16_t h, uint16_t color)
 {
-	uint8_t hi, lo;
 	if ((x >= _width) || (y >= _height))
 		return;
 	if ((y + h - 1) >= _height)
 		h = _height - y;
+
+#ifdef dislib16_ADVANCED_SCREEN_BUFFER_ENABLE
+	for (uint16_t i = 0; i < h; i++)
+	{
+		drawPixel(x, y + i, color);
+	}
+#else
+	uint8_t hi, lo;
 	hi = color >> 8;
 	lo = color;
 	setAddrWindow(x, y, x, y + h - 1);
@@ -123,6 +130,7 @@ void display16_graphics_LTSM ::drawFastVLine(uint16_t x, uint16_t y, uint16_t h,
 		spiWrite(lo);
 	}
 	spiEndTransaction();
+#endif
 }
 
 /*!
@@ -134,11 +142,18 @@ void display16_graphics_LTSM ::drawFastVLine(uint16_t x, uint16_t y, uint16_t h,
 */
 void display16_graphics_LTSM ::drawFastHLine(uint16_t x, uint16_t y, uint16_t w, uint16_t color)
 {
-	uint8_t hi, lo;
+
 	if ((x >= _width) || (y >= _height))
 		return;
 	if ((x + w - 1) >= _width)
 		w = _width - x;
+#ifdef dislib16_ADVANCED_SCREEN_BUFFER_ENABLE
+	for (uint16_t i = 0; i < w; i++)
+	{
+		drawPixel(x+i, y, color);
+	}
+#else
+	uint8_t hi, lo;
 	hi = color >> 8;
 	lo = color;
 	setAddrWindow(x, y, x + w - 1, y);
@@ -150,6 +165,7 @@ void display16_graphics_LTSM ::drawFastHLine(uint16_t x, uint16_t y, uint16_t w,
 		spiWrite(lo);
 	}
 	spiEndTransaction();
+#endif
 }
 
 /*!

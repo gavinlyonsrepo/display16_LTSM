@@ -72,10 +72,9 @@ VRAM of display.
 2. All Bitmap functions.
 3. All Draw text functions only IF **textCharPixelOrBuffer = true** 
 
-The situation with graphic functions is complicated as some use 
-fast draw methods of drawFastVLine() and drawFastHLine().
-and fillRectBuffer uses a local buffer in function to write to display VRAM.
-So depending on the graphic function code may write to screenBuffer and/or VRAM. 
+Note:
+
+FillRectBuffer uses a local buffer in function to write to display VRAM.
 Note fillRectBuffer is wrapped by fillScreen. 
 
 ## Examples

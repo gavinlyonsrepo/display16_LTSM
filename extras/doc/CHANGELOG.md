@@ -2,3 +2,7 @@
 
 * Version 1.0.0 August 2025 
   - Initial release of the Display16_LTSM library.
+* Version 1.0.1 Jan 2026
+  - Minor update
+  - Updated drawFastHLine() & drawFastVLine() to draw to buffer
+  when advanced buffer mode enabled :dislib16_ADVANCED_SCREEN_BUFFER_ENABLE.
