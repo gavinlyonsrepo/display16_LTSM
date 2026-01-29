@@ -77,10 +77,10 @@ public:
 	virtual void setAddrWindow(uint16_t, uint16_t, uint16_t, uint16_t) = 0;
 	void fillScreen(uint16_t color);
 	void setCursor(int16_t x, int16_t y);
-	void drawPixel(uint16_t, uint16_t, uint16_t);
+	virtual void drawPixel(uint16_t, uint16_t, uint16_t);
 	// Graphics functions
 	void drawLine(int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint16_t color);
-	void drawFastVLine(uint16_t x, uint16_t y, uint16_t h, uint16_t color);
+	virtual void drawFastVLine(uint16_t x, uint16_t y, uint16_t h, uint16_t color);
 	void drawFastHLine(uint16_t x, uint16_t y, uint16_t w, uint16_t color);
 	void drawRectWH(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint16_t color);
 	DisLib16::Ret_Codes_e fillRectBuffer(uint16_t, uint16_t, uint16_t, uint16_t, uint16_t);
@@ -153,6 +153,9 @@ protected:
 	int8_t _display_SCLK;  /**< GPIO Clock SPI Line */
 	int8_t _display_SDATA; /**< GPIO MOSI data into display SPI Line */
 	int8_t _display_MISO; /**< GPIO  MISO data out SPI Line */
+#ifdef dislib16_ADVANCED_SCREEN_BUFFER_ENABLE
+	std::vector <uint8_t> _screenBuffer; /**< Buffer for screen*/
+#endif
 
 private:
 	// Helper functions graphics 
@@ -177,9 +180,6 @@ private:
 #endif
 
 	bool _textCharPixelOrBuffer = false;  /**< Text character is drawn by local function buffer(false) or pixel(true) */
-#ifdef dislib16_ADVANCED_SCREEN_BUFFER_ENABLE
-	std::vector <uint8_t> _screenBuffer; /**< Buffer for screen*/
-#endif
 };
 
 
