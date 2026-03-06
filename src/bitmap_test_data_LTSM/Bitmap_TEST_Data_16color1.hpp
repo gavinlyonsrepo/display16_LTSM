@@ -13,7 +13,7 @@
 
 /// @cond
 
-// array size is 32768 (128x128x2) https://notisrac.github.io/FileToCArray/
+// array size is 32768 (128x128x2) https://github.com/gavinlyonsrepo/Guardian_LTSM
 // BITMAPV5HEADER offset 132( raw data here, -offset)
 // made in GIMP , Color space information written
 // RGB 565 16 bit color

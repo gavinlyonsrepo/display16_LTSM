@@ -75,9 +75,8 @@ Functions to support drawing bitmaps & sprites.
 | 4 | drawSpriteData  | 16 bit color  565 | 32768  | Data from array , Draws background color transparent | 
 
 1. Bitmap size in kiloBytes = (screenWidth * screenHeight * bitsPerPixel)/(1024 * 8)
-2. The data array for 1 is created from image files using file data conversion tool [link](https://javl.github.io/image2cpp/)
-3. The data array for 2-4  is created from BMP files using file data conversion tool [link](https://notisrac.github.io/FileToCArray/)
-4. 8-bit bitmaps only take half the memory of 16-bit bitmaps, at the expense of color depth:
+2. The data arrays for image created using conversion tool [link](https://github.com/gavinlyonsrepo/Guardian_LTSM)
+3. 8-bit bitmaps only take half the memory of 16-bit bitmaps, at the expense of color depth:
    256 colors vs 65,536 colors.
 
 
