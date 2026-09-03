@@ -52,6 +52,7 @@ Component drivers are separate dependent downstream libraries that include this 
 | ILI9341 | TFT LCD |SPI HW & SW  | [github link](https://github.com/gavinlyonsrepo/ILI9341_LTSM)|
 | GC9A01 | TFT LCD |SPI HW & SW  | [github link](https://github.com/gavinlyonsrepo/GC9A01_LTSM)|
 | GC9D01 | TFT LCD |SPI HW & SW  | [github link](https://github.com/gavinlyonsrepo/GC9D01_LTSM)|
+| GC9107 | TFT LCD |SPI HW & SW  | [github link](https://github.com/gavinlyonsrepo/GC9107_LTSM)|
 
 ## Software
 
