@@ -7,6 +7,7 @@
 * [Usage](#usage)  
 * [Functions](#functions)  
 * [Examples](#examples)
+* [ESP32 specific memory note](#esp32-specific-memory-note)
 
 ## Overview
 
@@ -80,3 +81,29 @@ Note fillRectBuffer is wrapped by fillScreen.
 ## Examples
 
 There are examples downstream in driver libraries for Advanced buffer mode. There are called "FRAME BUFFER.ino".
+
+## ESP32 specific memory note
+
+On ESP32 boards without PSRAM, the frame buffer must fit in a single *contiguous* block
+of internal DRAM — total free heap is NOT the limiting factor. The ESP32's 520KB SRAM is
+split across separate physical banks (per Espressif's ESP32 Technical Reference Manual),
+and the largest bank available for data (SRAM 2) is 200KB. After boot-time reservations
+for static data, ROM work areas, and FreeRTOS task stacks, the largest *contiguous*
+allocation available in a standard build is typically only around 110-114KB.
+
+This means a 240×240 buffer (115,200 bytes) can fail to allocate even when hundreds of
+KB of total free heap are reported — because no single free chunk is large enough, not
+because memory is exhausted. This is a fixed hardware/boot-time constraint on ESP32
+(no PSRAM), not something adjustable in application code.
+
+You can check your board's actual ceiling with:
+
+```cpp
+Serial.print("Free heap: ");
+Serial.println(ESP.getFreeHeap());
+Serial.print("Largest free block: ");
+Serial.println(ESP.getMaxAllocHeap());
+```
+
+See github [issue 3 on on GC9A01_LTSM for more details.](https://github.com/gavinlyonsrepo/GC9A01_LTSM/issues/3) 
+
