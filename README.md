@@ -1,22 +1,20 @@
-[![Website](https://img.shields.io/badge/Website-Link-blue.svg)](https://gavinlyonsrepo.github.io/)  [![Rss](https://img.shields.io/badge/Subscribe-RSS-yellow.svg)](https://gavinlyonsrepo.github.io//feed.xml)  [![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.com/paypalme/whitelight976)
-
 # display16_LTSM Readme
 
 ## Table of contents
 
-  * [Overview](#overview)
-  * [Installation](#installation)
-  * [Supported devices](#supported-devices)
-  * [Software](#software)
-    * [API documentation](#api-documentation)
-    * [Fonts](#fonts)
-    * [Bitmaps](#bitmaps)
-    * [Advanced Graphics](#advanced-graphics)
-    * [Advanced buffer mode](#Advanced-buffer-mode)
-    * [Debug mode](#debug-mode)
-    * [File-system](#file-system)
-    * [Error Codes](#error-codes)
-  * [Notes](#notes)
+* [Overview](#overview)
+* [Installation](#installation)
+* [Supported devices](#supported-devices)
+* [Software](#software)
+  * [API documentation](#api-documentation)
+  * [Fonts](#fonts)
+  * [Bitmaps](#bitmaps)
+  * [Advanced graphics mode](#advanced-graphics-mode)
+  * [Advanced buffer mode](#advanced-buffer-mode)
+  * [Debug mode](#debug-mode)
+  * [File-system](#file-system)
+  * [Error Codes](#error-codes)
+* [Notes](#notes)
 
 ## Overview
 
@@ -34,11 +32,11 @@
 5. [URL project github link](https://github.com/gavinlyonsrepo/display16_LTSM)
 
 * Author: Gavin Lyons
-
+* Donations welcome: [![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.com/paypalme/whitelight976)
 
 ## Installation
 
-The library is included in the official Arduino library manger and the optimum way to install it is using the library manager which can be opened by the *manage libraries* option in Arduino IDE. 
+The library is included in the official Arduino library manger and the optimum way to install it is using the library manager which can be opened by the *manage libraries* option in Arduino IDE.
 
 ## Supported devices
 
@@ -46,13 +44,13 @@ Component drivers are separate dependent downstream libraries that include this 
 
 | Component name | Type | Interface | Readme URL link |
 | -------- | ---------- | --------- | ---------- |
-| ST7735 | TFT LCD|SPI HW & SW| [github link](https://github.com/gavinlyonsrepo/ST7735_LTSM)|
-| ST7789 | TFT LCD|SPI HW & SW| [github link](https://github.com/gavinlyonsrepo/ST7789_LTSM)|
-| SSD1331| OLED |SPI HW & SW  | [github link](https://github.com/gavinlyonsrepo/SSD1331_LTSM)|
-| ILI9341 | TFT LCD |SPI HW & SW  | [github link](https://github.com/gavinlyonsrepo/ILI9341_LTSM)|
-| GC9A01 | TFT LCD |SPI HW & SW  | [github link](https://github.com/gavinlyonsrepo/GC9A01_LTSM)|
-| GC9D01 | TFT LCD |SPI HW & SW  | [github link](https://github.com/gavinlyonsrepo/GC9D01_LTSM)|
-| GC9107 | TFT LCD |SPI HW & SW  | [github link](https://github.com/gavinlyonsrepo/GC9107_LTSM)|
+| ST7735 | TFT LCD | SPI HW & SW | [github link](https://github.com/gavinlyonsrepo/ST7735_LTSM) |
+| ST7789 | TFT LCD | SPI HW & SW | [github link](https://github.com/gavinlyonsrepo/ST7789_LTSM) |
+| SSD1331 | OLED | SPI HW & SW | [github link](https://github.com/gavinlyonsrepo/SSD1331_LTSM) |
+| ILI9341 | TFT LCD | SPI HW & SW | [github link](https://github.com/gavinlyonsrepo/ILI9341_LTSM) |
+| GC9A01 | TFT LCD | SPI HW & SW | [github link](https://github.com/gavinlyonsrepo/GC9A01_LTSM) |
+| GC9D01 | TFT LCD | SPI HW & SW | [github link](https://github.com/gavinlyonsrepo/GC9D01_LTSM) |
+| GC9107 | TFT LCD | SPI HW & SW | [github link](https://github.com/gavinlyonsrepo/GC9107_LTSM) |
 
 ## Software
 
@@ -68,53 +66,51 @@ The font system readme is in the 'doc' folder [at link.](extras/doc/fonts/README
 
 Functions to support drawing bitmaps & sprites.
 
-| Num | Function Name | Colour support | bitmap size max (128X128 screen) |  Note |
+| Num | Function Name | Colour support | bitmap size max (128X128 screen) | Note |
 | ------ | ------ | ------ | ------ | ------ |
-| 1 | drawBitmap | bi-colour | 2048 bytes  | Data horizontally addressed |
-| 2 | drawBitmap8Data | 8 bit color RRRGGGBB  | 16384  | Data from array, Converted by software to 16-bit color |
-| 3 | drawBitmap16Data | 16 bit color 565  | 32768  | Data from array |
-| 4 | drawSpriteData  | 16 bit color  565 | 32768  | Data from array , Draws background color transparent | 
+| 1 | drawBitmap | bi-colour | 2048 bytes | Data horizontally addressed |
+| 2 | drawBitmap8Data | 8 bit color RRRGGGBB | 16384 | Data from array, Converted by software to 16-bit color |
+| 3 | drawBitmap16Data | 16 bit color 565 | 32768 | Data from array |
+| 4 | drawSpriteData | 16 bit color  565 | 32768 | Data from array , Draws background color transparent |
 
-1. Bitmap size in kiloBytes = (screenWidth * screenHeight * bitsPerPixel)/(1024 * 8)
-2. The data arrays for image created using conversion tool [link](https://github.com/gavinlyonsrepo/Guardian_LTSM)
+1. Bitmap size in kiloBytes = (screenWidth X screenHeight X bitsPerPixel)/(1024 X 8)
+2. The data arrays for image created using conversion tool [url link](https://github.com/gavinlyonsrepo/Guardian_LTSM)
 3. 8-bit bitmaps only take half the memory of 16-bit bitmaps, at the expense of color depth:
    256 colors vs 65,536 colors.
 
-
-### Advanced Graphics Mode
+### Advanced graphics mode
 
 It is **OFF** by default.
 There is an advanced graphics modes in library.
 Standard graphics supports drawing lines, pixels
 rectangles, triangles, circles and rounded rectangles.
-Advanced graphics supports drawing polygons, dot grid, quadrilaterals, 
+Advanced graphics supports drawing polygons, dot grid, quadrilaterals,
 arcs, ellipses and lines at an angle.
-If you want these 'advanced' functions, simply 
-comment in define dislib16 ADVANCED GRAPHICS ENABLE in display16 common LTSM.hpp. 
-This will enable advanced graphics mode. If this is disabled some examples 
+If you want these 'advanced' functions, simply
+comment in define dislib16 ADVANCED GRAPHICS ENABLE in display16 common LTSM.hpp.
+This will enable advanced graphics mode. If this is disabled some examples
 may not work fully or even compile.
 
 ### Advanced buffer mode
 
 It is **OFF** by default.
-Advanced buffer mode. There is advanced buffer mode where the code writes 
-to a global screen buffer instead of the VRAM of display. More details at readme, 
+Advanced buffer mode. There is advanced buffer mode where the code writes
+to a global screen buffer instead of the VRAM of display. More details at readme,
 which is in the 'doc' folder [at link.](extras/doc/buffer_mode/README.md)
 **This mode is only for high RAM MCUs.**
 
-### Debug Mode 
+### Debug Mode
 
 This is **OFF** by default
 If debug mode is enabled: error messages, warnings & important information is sent to serial monitor.
-User ino file must enable serial port. To enable simply 
+User ino file must enable serial port. To enable simply
 comment in define dislib16 DEBUG MODE ENABLE in file display16 common LTSM.hpp.
-
 
 ### File system
 
 File system Hierarchy:
 
-[![ pic ](https://github.com/gavinlyonsrepo/display16_LTSM/blob/main/extras/images/filesystem.jpg)](https://github.com/gavinlyonsrepo/display16_LTSM/blob/main/extras/images/filesystem.jpg) 
+[![ pic ](https://github.com/gavinlyonsrepo/display16_LTSM/blob/main/extras/images/filesystem.jpg)](https://github.com/gavinlyonsrepo/display16_LTSM/blob/main/extras/images/filesystem.jpg)
 
 ### Error Codes
 
