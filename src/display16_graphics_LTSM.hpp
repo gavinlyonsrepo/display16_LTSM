@@ -11,9 +11,6 @@
 #include <SPI.h>
 #include <math.h> // sin & cos
 
-#ifdef dislib16_ADVANCED_SCREEN_BUFFER_ENABLE
-#include <vector>
-#endif
 
 /*!
 	@brief Class to handle graphics of ST7735 display
@@ -23,7 +20,11 @@ class display16_graphics_LTSM : public display_Fonts , public Print
 
 public:
 	display16_graphics_LTSM ();
-	~display16_graphics_LTSM (){};
+	~display16_graphics_LTSM (){
+	#ifdef dislib16_ADVANCED_SCREEN_BUFFER_ENABLE
+		freeBands();
+	#endif
+	};
 
 	// Enums
 	/*! @brief 16-bit color definitions (RGB565 format).*/
@@ -70,6 +71,7 @@ public:
 	DisLib16::Ret_Codes_e clearBuffer(uint16_t color = C_BLACK);
 	DisLib16::Ret_Codes_e writeBuffer(uint8_t bufferMode = 0);
 	DisLib16::Ret_Codes_e destroyBuffer(void);
+	void freeBands(void); /**< Silent release of all bands */
 #endif 
 	// ====================================
 	// Screen functions
@@ -154,7 +156,32 @@ protected:
 	int8_t _display_SDATA; /**< GPIO MOSI data into display SPI Line */
 	int8_t _display_MISO; /**< GPIO  MISO data out SPI Line */
 #ifdef dislib16_ADVANCED_SCREEN_BUFFER_ENABLE
-	std::vector <uint8_t> _screenBuffer; /**< Buffer for screen*/
+	static constexpr uint8_t  _bandShift = 4;                 /**< log2 of rows per band , user can adjust */
+	static constexpr uint16_t _bandRows  = 1u << _bandShift;  /**< Rows per band (16)*/
+	static constexpr uint8_t  _maxBands  = 24;                /**< 24 x 16 = 384 rows max, user can adjust */
+	uint8_t* _screenBands[_maxBands] = {nullptr};             /**< the table of pointers, 
+																each to a separately allocated block holding one band’s rows 
+																(_bandRows × _width × 2 bytes)One calloc'd block per band */
+	uint8_t  _bandCount = 0;                                  /**< Bands currently allocated, Zero means “no buffer”, */
+	uint16_t _bufWidth  = 0; /**< Display width the bands were allocated for */
+	uint16_t _bufHeight = 0; /**< Display height the bands were allocated for */	
+	/*!
+		@brief Number of pixel rows held by one band of the screen buffer.
+		@param band Zero-based band index. Must be less than the number of
+			bands in use, i.e. ceil(_height / _bandRows).
+		@return _bandRows (16) for every band except possibly the last.
+			When the display height is not a multiple of _bandRows the last
+			band holds the remaining rows, e.g. height 230 gives bands 0-13
+			with 16 rows and band 14 with 6.
+		@note Used by setBuffer() to size each band's allocation, and by
+			clearBuffer() and writeBuffer() to bound their loops.
+			The band index is not range checked.
+	*/
+	inline uint16_t bandRowCount(uint16_t band) const
+	{
+		uint16_t left = _height - (band << _bandShift);
+		return (left < _bandRows) ? left : _bandRows;
+	}
 #endif
 
 private:

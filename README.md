@@ -97,7 +97,7 @@ It is **OFF** by default.
 Advanced buffer mode. There is advanced buffer mode where the code writes
 to a global screen buffer instead of the VRAM of display. More details at readme,
 which is in the 'doc' folder [at link.](extras/doc/buffer_mode/README.md)
-**This mode is only for high RAM MCUs.**
+This mode requires signifcant RAM, depending on size of display.
 
 ### Debug Mode
 

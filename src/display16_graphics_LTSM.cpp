@@ -12,26 +12,29 @@
 display16_graphics_LTSM::display16_graphics_LTSM() {}
 
 /*!
-	@brief Draw a pixel to screen
+	@brief Draw a pixel to the display or, in buffer mode, to the screen buffer.
 	@param x  Column co-ord
-	@param y  row co-ord
+	@param y  Row co-ord
 	@param color 565 16-bit
-	@details  By default uses spiWriteDataBuffer method to write each row as a buffer for speed.
-			Much faster than pixel by pixel spi byte writes
-			If dislib16_ADVANCED_SCREEN_BUFFER_ENABLE is defined then the function 
-			will use the screen buffer to draw the pixel into VRAM.
-			Will return early if x or y are out of bounds.
+	@details  By default the pixel is sent straight to the display: the address
+		window is set and the two RGB565 bytes are written over SPI.
+		If dislib16_ADVANCED_SCREEN_BUFFER_ENABLE is defined the pixel is
+		instead stored in the screen buffer in RAM, and nothing reaches the
+		display until writeBuffer() is called. 
+		Returns early, drawing nothing, if x or y are out of bounds, or in
+		buffer mode if no buffer has been allocated with setBuffer().
 */
 void display16_graphics_LTSM ::drawPixel(uint16_t x, uint16_t y, uint16_t color)
 {
 	if ((x >= _width) || (y >= _height))
 		return;
 #ifdef dislib16_ADVANCED_SCREEN_BUFFER_ENABLE
-	// Calculate the index in the buffer
-	size_t index = (y * _width + x) * 2; // 2 bytes per pixel for RGB565
-	// Write the color to the buffer
-	_screenBuffer[index] = (uint8_t)(color >> 8);     // High byte
-	_screenBuffer[index + 1] = (uint8_t)(color & 0xFF); // Low byte
+	if (_width != _bufWidth)
+		return; // no buffer, or display rotated/resized since setBuffer()
+	uint8_t* band = _screenBands[y >> _bandShift];
+	size_t index = ((static_cast<size_t>(y & (_bandRows - 1)) * _width) + x) * 2; // RGB565
+	band[index]     = (uint8_t)(color >> 8);   // High byte
+	band[index + 1] = (uint8_t)(color & 0xFF); // Low byte
 #else
 	setAddrWindow(x, y, x + 1, y + 1);
 	uint8_t TransmitBuffer[2]{(uint8_t)(color >> 8), (uint8_t)(color & 0xFF)};
@@ -1907,114 +1910,183 @@ float display16_graphics_LTSM::sineFromDegrees(float angle)
 //***************** Buffer mode functions *****************//
 #ifdef dislib16_ADVANCED_SCREEN_BUFFER_ENABLE
 /*!
-	@brief Allocates memory for the screen buffer based on display resolution.
-		The buffer size is calculated as width × height × 2 bytes (RGB565 format).
-		If allocation fails, it returns a memory allocation error.
-		In debug mode, it prints the allocated buffer size.
+	@brief Allocates the screen buffer, split into horizontal bands.
+	@details The buffer holds width x height x 2 bytes (RGB565) and is stored
+		as bands of _bandRows (16) rows, each allocated separately and zero
+		filled (black). Any existing buffer is released first, so the
+		function can be called more than once safely. If any band fails to
+		allocate, all bands allocated so far are freed. In debug mode it
+		prints the allocated size in bytes and the number of bands.
 	@return DisLib16::Success on successful allocation,
-			DisLib16::MemoryAError if allocation fails.
+			DisLib16::MemoryAError if the display size is invalid, the display
+			is taller than the band table allows (_maxBands x _bandRows
+			rows, 384 by default), or an allocation fails.
+	@note The size reported in debug mode is pixel data only. It does not
+		include any allocator overhead.
 */
 DisLib16::Ret_Codes_e display16_graphics_LTSM::setBuffer(void)
 {
-	// Allocate memory for the buffer
-	_screenBuffer.resize(_width * _height * 2);
-	if (_screenBuffer.empty() || (_screenBuffer.size() != static_cast<size_t>(_width) * _height * 2))
+	freeBands(); // release any previous allocation; also clears _bufWidth/_bufHeight
+
+	const uint16_t numBands = (_height + _bandRows - 1) >> _bandShift;
+	if (_width == 0 || numBands == 0 || numBands > _maxBands)
 	{
 		#ifdef dislib16_DEBUG_MODE_ENABLE
-			Serial.println("Error: setBuffer: Memory allocation failed");
+			Serial.println("Error: setBuffer: invalid display size or too tall for band table");
 		#endif
 		return DisLib16::MemoryAError;
 	}
+	const size_t rowBytes = static_cast<size_t>(_width) * 2;
+	size_t totalBytes = 0;
+	for (uint16_t b = 0; b < numBands; ++b)
+	{
+		const size_t bandBytes = bandRowCount(b) * rowBytes;
+		uint8_t* p = static_cast<uint8_t*>(calloc(1, bandBytes));
+		if (p == nullptr)
+		{
+			#ifdef dislib16_DEBUG_MODE_ENABLE
+				Serial.print("Error: setBuffer: allocation failed at band ");
+				Serial.println(b);
+			#endif
+			freeBands(); // frees the bands allocated so far, size stays cleared
+			return DisLib16::MemoryAError;
+		}
+		_screenBands[_bandCount++] = p;
+		totalBytes += bandBytes;
+	}
+	// All bands allocated: record the size they were laid out for
+	_bufWidth  = _width;
+	_bufHeight = _height;
 	#ifdef dislib16_DEBUG_MODE_ENABLE
 		Serial.print("Buffer size set bytes: ");
-		Serial.println(_screenBuffer.size());
+		Serial.println(totalBytes);
+		Serial.print("Buffer bands: ");
+		Serial.println(numBands);
 	#endif
 	return DisLib16::Success;
 }
 
 /*!
 	@brief Clears the screen buffer by filling it with a given color.
-		The buffer is filled in RGB565 format. This function assumes the buffer
-		has already been allocated via setBuffer().
+	@details Fills every band of the buffer with the RGB565 color, high byte
+		first, the same byte order drawPixel() uses. When both bytes of the
+		color are equal (0xFFFF) each band is
+		filled with a single memset, otherwise with a two byte store loop.
+		Only the screen buffer in RAM is changed; call writeBuffer() to
+		send it to the display.
 	@param color The 16-bit RGB565 color to fill the buffer with.
 	@return DisLib16::Success on completion.
-			DisLib16::BufferEmpty if the buffer is empty.
+			DisLib16::BufferEmpty if no buffer has been allocated with
+			setBuffer().
 */
 DisLib16::Ret_Codes_e display16_graphics_LTSM::clearBuffer(uint16_t color)
 {
-	if (_screenBuffer.empty())
-	{
-		#ifdef dislib16_DEBUG_MODE_ENABLE	
-			Serial.println("Error: clearBuffer: Buffer is empty");
-		#endif
-		return DisLib16::BufferEmpty;
-	}
-	uint8_t high = color >> 8;
-	uint8_t low  = color & 0xFF;
-	for (size_t i = 0; i < _screenBuffer.size(); i += 2) {
-		_screenBuffer[i] = high;
-		_screenBuffer[i + 1] = low;
-	}
-	return DisLib16::Success;
-}
-
-/*!
-	@brief Writes the contents of the screen buffer to the display.
-		This function assumes the buffer has already been allocated and filled.
-		It sets the address window for the entire screen and writes the buffer data.
-	@param bufferMode If 0(default), writes the entire buffer at once; otherwise, writes row by row.
-			Row-by-row writing is used by displays like SSD1331 that require it.
-	@return DisLib16::Success on completion.
-			DisLib16::BufferEmpty if the buffer is empty.
-*/
-DisLib16::Ret_Codes_e display16_graphics_LTSM::writeBuffer(uint8_t bufferMode )
-{
-	if (_screenBuffer.empty())
+	if (_bandCount == 0 || _width != _bufWidth || _height != _bufHeight)
 	{
 		#ifdef dislib16_DEBUG_MODE_ENABLE
-			Serial.println("Error: writeBuffer: Buffer is empty");
+			Serial.println("Error: buffer not allocated, or display size changed/rotated. Call setBuffer() again");
 		#endif
 		return DisLib16::BufferEmpty;
 	}
-	if (bufferMode == 0){
-		//  write the entire buffer at once, default mode
-		setAddrWindow(0, 0, _width-1 , _height);
-		spiWriteDataBuffer(const_cast<uint8_t *>(_screenBuffer.data()),_screenBuffer.size());
-	} else {
-		// Write the buffer row by row
-		for (uint16_t row = 0; row < _height; ++row)
+	const uint8_t high = color >> 8;
+	const uint8_t low  = color & 0xFF;
+	const size_t rowBytes = static_cast<size_t>(_width) * 2;
+	for (size_t b = 0; b < _bandCount; ++b)
+	{
+		uint8_t* p = _screenBands[b];
+		const size_t bytes = bandRowCount(b) * rowBytes;
+		if (high == low)
 		{
-			setAddrWindow(0, row, _width - 1, row);
-			const uint8_t* rowPtr = _screenBuffer.data() + row * _width * 2;
-			spiWriteDataBuffer(const_cast<uint8_t*>(rowPtr), _width * 2);
+			memset(p, high, bytes); // black, white etc.
+		} else {
+			for (size_t i = 0; i < bytes; i += 2)
+			{
+				p[i] = high;
+				p[i + 1] = low;
+			}
 		}
 	}
 	return DisLib16::Success;
 }
 
 /*!
-	@brief Destroys the screen buffer by resizing it to zero.
-		This function checks if the buffer has been 
-		successfully destroyed and prints debug information.
-	@return DisLib16::Success on successful destruction,
-			DisLib16::MemoryAError if destruction fails.
+	@brief Writes the contents of the screen buffer to the display.
+	@details The buffer is sent one band at a time. For each band the
+		address window is set to cover that band's rows across the full
+		display width, then the band's pixel data is written. 
+	@param bufferMode If 0 (default), writes each band as one block;
+			otherwise, writes row by row(required by displays like the SSD1331)
+	@return DisLib16::Success on completion.
+			DisLib16::BufferEmpty if no buffer has been allocated with
+			setBuffer().
+	@note The buffer itself is not modified by this call.
+*/
+DisLib16::Ret_Codes_e display16_graphics_LTSM::writeBuffer(uint8_t bufferMode)
+{
+	if (_bandCount == 0 || _width != _bufWidth || _height != _bufHeight)
+	{
+		#ifdef dislib16_DEBUG_MODE_ENABLE
+			Serial.println("Error: buffer not allocated, or display size changed/rotated. Call setBuffer() again");
+		#endif
+		return DisLib16::BufferEmpty;
+	}
+	const size_t rowBytes = static_cast<size_t>(_width) * 2;
+	for (size_t b = 0; b < _bandCount; ++b)
+	{
+		const uint16_t y0   = b << _bandShift;
+		const uint16_t rows = bandRowCount(b);
+		if (bufferMode == 0)
+		{
+			// default: one window and one transfer per band
+			setAddrWindow(0, y0, _width - 1, y0 + rows - 1);
+			spiWriteDataBuffer(_screenBands[b], rows * rowBytes);
+		} else {
+			// row by row, for displays like SSD1331 that require it
+			for (uint16_t r = 0; r < rows; ++r)
+			{
+				setAddrWindow(0, y0 + r, _width - 1, y0 + r);
+				spiWriteDataBuffer(_screenBands[b] + (r * rowBytes), rowBytes);
+			}
+		}
+	}
+	return DisLib16::Success;
+}
+
+/*!
+	@brief Destroys the screen buffer, releasing all of its memory.
+	@details Frees every allocated buffer band via freeBands(). Safe to call
+		when no buffer is allocated. In debug mode prints a confirmation
+		message. After this call the buffer must be re-allocated with
+		setBuffer() before drawing or writing.
+	@return DisLib16::Success always. The return type is kept for API
+		compatibility with earlier versions of the library(pre 1.1.0)
 */
 DisLib16::Ret_Codes_e display16_graphics_LTSM::destroyBuffer(void)
 {
-	_screenBuffer.resize(0);
-	if (_screenBuffer.size() == 0)
-	{
-		#ifdef dislib16_DEBUG_MODE_ENABLE
-			Serial.println("Buffer has been successfully destroyed");
-		#endif
-		return DisLib16::Success;
-	}else {
-			#ifdef dislib16_DEBUG_MODE_ENABLE
-				Serial.println("Error: destroyBuffer : Buffer destruction failed.");
-			#endif
-		return DisLib16::MemoryAError;
-	}
+	freeBands();
+	#ifdef dislib16_DEBUG_MODE_ENABLE
+		Serial.println("Buffer has been successfully destroyed");
+	#endif
 	return DisLib16::Success;
+}
+
+/*!
+	@brief Silently frees all screen buffer bands.
+	@details Frees each allocated band, sets its table entry back to nullptr,
+		resets the band count and clears the recorded buffer size, so the
+		buffer reads as not valid. Prints no debug output and is safe to
+		call when no buffer is allocated.
+*/
+void display16_graphics_LTSM::freeBands(void)
+{
+	for (uint8_t b = 0; b < _bandCount; ++b)
+	{
+		free(_screenBands[b]);
+		_screenBands[b] = nullptr;
+	}
+	_bandCount = 0;
+	_bufWidth  = 0;
+	_bufHeight = 0;
 }
 #endif
 //**************** EOF *****************
